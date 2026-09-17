@@ -1,0 +1,55 @@
+name: Build Essence JXS APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout JXS patch repository
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned Essence/OpenLauncher source
+        uses: actions/checkout@v4
+        with:
+          repository: vickoc911/openlauncher
+          ref: f2ef3903207ef712de1cd850d8ad3b14cfadd5fc
+          path: upstream
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: upstream/**/*.gradle*
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Apply JXS changes
+        run: python3 patches/apply_patch.py upstream
+
+      - name: Build debug APK
+        working-directory: upstream
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug --stacktrace
+
+      - name: Rename APK
+        run: |
+          cp upstream/app/build/outputs/apk/debug/app-debug.apk Essence-Launcher-1.0.0-essence-jxs.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Essence-Launcher-JXS-APK
+          path: Essence-Launcher-1.0.0-essence-jxs.apk
+          if-no-files-found: error
