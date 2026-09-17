@@ -31,8 +31,9 @@ jobs:
           cache: gradle
           cache-dependency-path: upstream/**/*.gradle*
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK licenses
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
 
       - name: Apply JXS changes
         run: python3 patches/apply_patch.py upstream
