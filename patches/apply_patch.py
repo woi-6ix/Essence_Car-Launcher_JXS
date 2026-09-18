@@ -313,6 +313,76 @@ s, n = re.subn(
 )
 if n != 1:
     raise SystemExit(f"ViewModel widget operation block: expected 1 replacement, found {n}")
+launcher_old = '''    fun loadInstalledApps() {
+        if (_appsLoading.value) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _appsLoading.value = true
+            val pm = getApplication<Application>().packageManager
+
+            // Use getInstalledApplications — same source Android Settings uses,
+            // catches apps with no launcher/ACTION_MAIN activity (e.g. CarPlay companions)
+            _apps.value = pm.getInstalledApplications(0)
+                .mapNotNull { appInfo ->
+                    try {
+                        val label = pm.getApplicationLabel(appInfo).toString()
+                        if (label.isBlank()) return@mapNotNull null
+                        AppInfo(
+                            packageName = appInfo.packageName,
+                            appName     = label,
+                            icon        = pm.getApplicationIcon(appInfo),
+                            isSystemApp = (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                        )
+                    } catch (_: Exception) { null }
+                }
+                .distinctBy { it.packageName }
+                .sortedBy { it.appName }
+            _appsLoading.value = false
+        }
+    }
+'''
+launcher_new = '''    fun loadInstalledApps() {
+        if (_appsLoading.value) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _appsLoading.value = true
+            val app = getApplication<Application>()
+            val pm = app.packageManager
+
+            // App Library should behave like a normal launcher: only show apps
+            // that explicitly expose a MAIN/LAUNCHER activity. This keeps hidden
+            // services, providers and internal Android packages out of "All Apps".
+            val launcherIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
+            }
+
+            _apps.value = pm.queryIntentActivities(launcherIntent, 0)
+                .mapNotNull { resolveInfo ->
+                    val activityInfo = resolveInfo.activityInfo ?: return@mapNotNull null
+                    if (activityInfo.packageName == app.packageName) return@mapNotNull null
+                    try {
+                        val label = resolveInfo.loadLabel(pm)?.toString()
+                            ?.takeIf { it.isNotBlank() }
+                            ?: pm.getApplicationLabel(activityInfo.applicationInfo).toString()
+                        AppInfo(
+                            packageName = activityInfo.packageName,
+                            appName = label,
+                            icon = resolveInfo.loadIcon(pm),
+                            isSystemApp = (activityInfo.applicationInfo.flags and
+                                android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                        )
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+                .distinctBy { it.packageName }
+                .sortedBy { it.appName.lowercase() }
+
+            _appsLoading.value = false
+        }
+    }
+'''
+s = replace_once(s, launcher_old, launcher_new, "launcher-only app library")
+save(rel, s)
+
 save(rel, s)
 
 rel = "app/src/main/java/com/openlauncher/app/ui/screen/HomeScreen.kt"
