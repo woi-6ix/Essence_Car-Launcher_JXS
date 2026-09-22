@@ -2,6 +2,7 @@
 
 ![Android](https://img.shields.io/badge/Platform-Android-green)
 ![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple)
+![Python](https://img.shields.io/badge/Language-Python-blue)
 ![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue)
 ![Build](https://img.shields.io/badge/Build-GitHub%20Actions-black)
 ![Pages](https://img.shields.io/badge/Home%20Pages-3-orange)
@@ -247,7 +248,9 @@ Essence_Car-Launcher_JXS/
 | Category | Technology |
 | --- | --- |
 | Platform | Android |
-| Language | Kotlin |
+| Languages | Kotlin + Python |
+| Android Application | Kotlin |
+| Patch / Build Automation | Python 3 |
 | UI | Jetpack Compose |
 | Persistence | Android DataStore |
 | Build System | Gradle |
