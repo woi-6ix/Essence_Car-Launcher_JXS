@@ -524,9 +524,8 @@ The JXS project focuses on customized automotive behavior and workflow changes w
 
 ## Author
 
-**Woi-6ix**
-
-Built as a customized Android automotive launcher project focused on multi-page widget layouts, head-unit usability, connectivity, GPS-based widgets, and automated Android build workflows.
+**JXS**  
+GitHub: [@woi-6ix](https://github.com/woi-6ix)
 
 ---
 
